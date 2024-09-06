@@ -52,6 +52,18 @@ void
 wasm_loader_unload(WASMModule *module);
 
 /**
+ * Resolve symbols for WASM module
+ *
+ * @param module the module to resolve symbols for
+ * @param error_buf output of the exception info
+ * @param error_buf_size the size of the exception string
+ */
+
+bool
+wasm_resolve_symbols(WASMModule *module, char *error_buf,
+                     uint32 error_buf_size);
+
+/**
  * Find address of related else opcode and end opcode of opcode block/loop/if
  * according to the start address of opcode.
  *
