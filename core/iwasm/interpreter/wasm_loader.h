@@ -52,6 +52,15 @@ void
 wasm_loader_unload(WASMModule *module);
 
 /**
+ * Resolve symbols for WASM module
+ *
+ * @param module the module to resolve symbols for
+ */
+
+void
+wasm_resolve_symbols(WASMModule *module);
+
+/**
  * Find address of related else opcode and end opcode of opcode block/loop/if
  * according to the start address of opcode.
  *

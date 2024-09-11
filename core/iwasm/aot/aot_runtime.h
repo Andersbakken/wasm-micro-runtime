@@ -485,6 +485,12 @@ aot_load_from_sections(AOTSection *section_list, char *error_buf,
                        uint32 error_buf_size);
 
 /**
+ * Resolve symbols for an AOT module
+ */
+void
+aot_resolve_symbols(AOTModule *module);
+
+/**
  * Unload a AOT module.
  *
  * @param module the module to be unloaded

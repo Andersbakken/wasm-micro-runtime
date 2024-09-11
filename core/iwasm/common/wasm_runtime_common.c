@@ -7,6 +7,7 @@
 #include "bh_common.h"
 #include "bh_assert.h"
 #include "bh_log.h"
+#include "wasm_loader.h"
 #include "wasm_native.h"
 #include "wasm_runtime_common.h"
 #include "wasm_memory.h"
@@ -1482,6 +1483,23 @@ wasm_runtime_load_ex(uint8 *buf, uint32 size, const LoadArgs *args,
     /*TODO: use file name as name and register with name? */
     return register_module_with_null_name(module_common, error_buf,
                                           error_buf_size);
+}
+
+WASM_RUNTIME_API_EXTERN void
+wasm_runtime_resolve_symbols(WASMModuleCommon *module)
+{
+#if WASM_ENABLE_INTERP != 0
+    if (module->module_type == Wasm_Module_Bytecode) {
+        wasm_resolve_symbols((WASMModule *)module);
+        return;
+    }
+#endif
+#if WASM_ENABLE_AOT != 0
+    if (module->module_type == Wasm_Module_AoT) {
+        aot_resolve_symbols((AOTModule *)module);
+        return;
+    }
+#endif
 }
 
 WASMModuleCommon *
