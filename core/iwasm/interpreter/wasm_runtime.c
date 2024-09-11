@@ -83,6 +83,56 @@ wasm_unload(WASMModule *module)
     wasm_loader_unload(module);
 }
 
+void
+wasm_resolve_symbols(WASMModule *module)
+{
+    for (uint32 idx = 0; idx < module->import_function_count; ++idx) {
+        WASMFunctionImport *import = &module->import_functions[idx].u.function;
+        bool linked = import->func_ptr_linked;
+#if WASM_ENABLE_MULTI_MODULE != 0
+        if (import->import_func_linked) {
+            linked = true;
+        }
+#endif
+        if (!linked) {
+            wasm_resolve_import_func(module, import);
+        }
+    }
+}
+
+void
+wasm_resolve_import_func(WASMModule *module, WASMFunctionImport *function)
+{
+#if WASM_ENABLE_MULTI_MODULE != 0
+    char error_buf[128];
+    WASMModule *sub_module = NULL;
+#endif
+    function->func_ptr_linked = wasm_native_resolve_symbol(
+        function->module_name, function->field_name, function->func_type,
+        &function->signature, &function->attachment, &function->call_conv_raw);
+
+#if WASM_ENABLE_MULTI_MODULE != 0
+    if (!function->func_ptr_linked) {
+        if (!wasm_runtime_is_built_in_module(function->module_name)) {
+            sub_module = (WASMModule *)wasm_runtime_load_depended_module(
+                (WASMModuleCommon *)module, function->module_name, error_buf,
+                sizeof(error_buf));
+            if (!sub_module) {
+                LOG_WARNING("failed to load sub module: %s", error_buf);
+            }
+            else {
+                function->import_func_linked = wasm_native_resolve_symbol(
+                    function->module_name, function->field_name,
+                    function->func_type, &function->signature,
+                    &function->attachment, &function->call_conv_raw);
+            }
+        }
+        function->import_module =
+            function->import_func_linked ? NULL : sub_module;
+    }
+#endif
+}
+
 static void *
 runtime_malloc(uint64 size, char *error_buf, uint32 error_buf_size)
 {
